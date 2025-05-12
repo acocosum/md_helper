@@ -1,5 +1,7 @@
 # 个人知识库助手
 
+![演示截图](docs/demo.png)
+
 这是一个基于 Streamlit 和 OpenAI API/兼容API 开发的个人知识库问答助手，帮助你从 Markdown 文档中快速获取信息。
 
 ## 主要特性

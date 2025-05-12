@@ -2,13 +2,14 @@
 
 ![演示截图](docs/demo.png)
 
-这是一个基于 Streamlit 和 OpenAI API/兼容API 开发的个人知识库问答助手，帮助你从 Markdown 文档中快速获取信息。
+这是一个基于 Streamlit、LangChain、FAISS 和 OpenAI API/兼容API 开发的个人知识库问答助手，帮助你从 Markdown 文档中快速获取信息。
 
 ## 主要特性
 
 - 支持上传 Markdown 格式的笔记文件
 - 自动解析、切分和向量化文本内容
-- 基于语义相似度检索相关内容
+- 基于 FAISS 的高效向量索引和语义相似度检索
+- 使用 LangChain 框架构建知识检索与问答链
 - 使用大型语言模型（LLM）生成准确的问答回复
 - 支持自定义 OpenAI 兼容 API 地址（如第三方API、本地API等）
 - embedding 和 chat 均可用，适配官方和第三方API
@@ -46,7 +47,11 @@ python -m venv venv
 4. 运行应用
 
 ```bash
+# 运行原始版本（不含 LangChain/FAISS）
 streamlit run app.py
+
+# 推荐：运行 LangChain + FAISS 版本
+streamlit run app_langchain.py
 ```
 
 5. 在浏览器中访问应用（通常是 http://localhost:8501）
@@ -65,8 +70,10 @@ streamlit run app.py
 
 ```
 md_helper/
-├── app.py                   # Streamlit 主程序
+├── app.py                   # 原始 Streamlit 主程序
+├── app_langchain.py         # 使用 LangChain 和 FAISS 的主程序
 ├── modules/
+│   ├── langchain_helper.py  # LangChain 集成模块
 │   ├── markdown_loader.py   # Markdown 文件加载和文本提取
 │   ├── text_splitter.py     # 文本切分
 │   ├── embedder.py          # OpenAI Embedding 调用（支持自定义API）
@@ -75,15 +82,21 @@ md_helper/
 │   └── ...
 ├── requirements.txt         # 所需依赖库
 ├── README.md                # 项目说明
+├── docs/
+│   ├── API_SPECIFICATION.md # API接口规范
+│   ├── PROJECT_ARCHITECTURE.md # 架构说明
+│   ├── DEVELOPER_GUIDE.md   # 开发者指南
+│   └── USER_GUIDE.md        # 用户指南
 ```
 
 ## 技术选型
 
 - 前端界面：Streamlit
-- Markdown 解析：Python markdown 库
+- 知识库检索与问答链：LangChain
+- 向量存储：FAISS (Facebook AI Similarity Search)
+- Markdown 解析：Unstructured-Markdown
 - 文本向量化：OpenAI Embedding API 或兼容API
 - 问答生成：OpenAI GPT API 或兼容API
-- 向量检索：基于余弦相似度的内存检索
 
 ## 注意事项
 

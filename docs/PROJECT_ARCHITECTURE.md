@@ -1,185 +1,61 @@
-# 个人知识库助手 - 技术架构与实现文档
-
-本文档详细描述个人知识库助手的架构设计、技术实现和模块逻辑，为开发者和用户提供全面的项目理解。
+# 个人知识库助手 - 技术架构与实现文档（LangChain 版）
 
 ## 系统概述
 
-个人知识库助手是一个基于 Streamlit 和 OpenAI API 开发的应用程序，允许用户上传 Markdown 格式的知识文档，通过向量嵌入（embeddings）和语义检索技术，实现基于自然语言的智能问答功能。系统支持官方 OpenAI API 和兼容的第三方 API 地址，提供灵活的部署和使用方案。
+本系统基于 Streamlit + LangChain + FAISS + OpenAI API/兼容API，支持 Markdown 文档上传、自动切分、向量化、索引、语义检索与 LLM 问答。
 
-## 技术栈
-
-- **前端框架**：Streamlit
-- **后端语言**：Python 3.8+
-- **向量嵌入**：OpenAI Embeddings API (text-embedding-ada-002)
-- **自然语言处理**：OpenAI Chat API (GPT-3.5-Turbo)
-- **文本处理**：Python markdown 库
-- **向量计算**：NumPy
-
-## 系统架构
-
-系统采用模块化设计，主要由以下组件组成：
+## 架构图
 
 ```
-客户端 (Web 浏览器)
-    │
-    ▼
-Streamlit 界面 (app.py)
-    │
-    ├───► Markdown 解析器 (markdown_loader.py)
-    │
-    ├───► 文本切分器 (text_splitter.py)
-    │
-    ├───► 向量嵌入器 (embedder.py) ───► OpenAI API / 第三方 API
-    │
-    ├───► 向量检索器 (retriever.py)
-    │
-    └───► 问答链 (qa_chain_new.py) ───► OpenAI API / 第三方 API
+用户
+  │
+  ▼
+Streamlit 前端（app_langchain.py）
+  │
+  ├─ langchain_helper.py（文档加载/切分/嵌入/索引/问答链）
+  │
+  └─ LangChain 生态（UnstructuredMarkdownLoader, RecursiveCharacterTextSplitter, OpenAIEmbeddings, FAISS, ChatOpenAI, RetrievalQA）
+  │
+  └─ OpenAI API/兼容API
 ```
 
-## 数据流程
+## 主要流程
 
-1. **文档上传**：用户通过 Streamlit 界面上传 Markdown 格式文件
-2. **文本预处理**：系统解析 Markdown，提取纯文本内容
-3. **文本切分**：将长文本分割成大小适中的文本块，保留一定的重叠以维持上下文
-4. **向量嵌入**：调用 OpenAI Embeddings API 将每个文本块转换为高维向量
-5. **问题处理**：用户提问时，系统同样将问题转换为向量表示
-6. **相似度检索**：基于余弦相似度，检索与问题最相关的文本块
-7. **答案生成**：将问题和检索到的相关文本块发送给 LLM，生成最终答案
-8. **结果展示**：在界面上显示生成的答案和相关文本块（可展开查看）
+1. **文件上传**：用户上传 Markdown 文件
+2. **文档加载**：用 UnstructuredMarkdownLoader 加载为 LangChain 文档对象
+3. **文本切分**：用 RecursiveCharacterTextSplitter 切分为文本块
+4. **向量化**：用 OpenAIEmbeddings 生成文本块向量
+5. **索引构建**：用 FAISS 构建向量数据库
+6. **问答链构建**：用 ChatOpenAI + RetrievalQA 构建检索增强问答链
+7. **语义检索与问答**：用户输入问题，系统自动检索相关文本块并用 LLM 生成答案
 
-## 核心模块分析
+## 关键模块说明
 
-### 主程序 (app.py)
+- **app_langchain.py**：主入口，负责 UI、参数配置、流程调度
+- **modules/langchain_helper.py**：LangChain 相关功能的封装，便于维护和扩展
+- **FAISS**：高效的本地向量数据库，支持大规模知识块检索
+- **OpenAIEmbeddings/ChatOpenAI**：支持官方和第三方 API，兼容性强
 
-主程序基于 Streamlit 构建用户界面，协调各模块工作，主要功能：
+## 会话状态管理
 
-- 页面布局和 UI 元素设置
-- 会话状态（session state）管理
-- 文件上传和处理流程管理
-- 问答交互处理
-- API 配置和初始化
+- `st.session_state.vectorstore`：FAISS 向量索引对象
+- `st.session_state.qa_chain`：问答链对象
+- `st.session_state.file_processed`：文件处理状态
+- `st.session_state.openai_key`/`api_base`：API 配置
 
-### Markdown 解析器 (markdown_loader.py)
+## 扩展性
 
-负责处理上传的 Markdown 文件，提取有意义的文本内容：
+- 支持多种文档格式（可扩展更多 Loader）
+- 支持多种 LLM（可替换 ChatOpenAI）
+- 支持多种向量数据库（可替换 FAISS）
+- 便于集成更多 LangChain 工具链
 
-- 使用 Python markdown 库将 Markdown 转为 HTML
-- 使用自定义逻辑将 HTML 转换为结构化纯文本
-- 保留标题、段落、列表等文档结构
-- 过滤无用标签，合并多余空行
+## 性能与安全
 
-### 文本切分器 (text_splitter.py)
+- 本地向量索引，检索高效
+- API Key 仅保存在本地 session，不落盘
+- 支持大文件分块处理，适合个人/团队知识库
 
-将长文本切分为适合向量化的小块：
+## 结语
 
-- 基于段落进行初步分割
-- 根据设定的块大小（chunk_size）和重叠度（overlap）参数切分文本
-- 确保切分后的文本块保持上下文连贯性
-- 提供回退机制处理极端情况（如单个段落过长）
-
-### 向量嵌入器 (embedder.py)
-
-调用 OpenAI 或兼容 API 进行文本向量化：
-
-- 支持官方 OpenAI API 和自定义 API 地址
-- 对 API URL 进行预处理以支持不同格式的端点地址
-- 通过 session state 存储 API 客户端以维持状态
-- 处理 API 调用异常，提供优雅降级
-- 避免使用全局 API 设置，确保请求通过指定 API 发送
-
-### 向量检索器 (retriever.py)
-
-实现向量相似度搜索功能：
-
-- 基于余弦相似度算法计算向量间的相似度
-- 使用 NumPy 高效实现向量计算
-- 对相似度结果排序并返回 top-k 相关文本块索引
-- 优化处理边缘情况（如空向量）
-
-### 问答链 (qa_chain_new.py)
-
-调用语言模型生成最终答案：
-
-- 构造包含上下文信息的提示（prompt）
-- 从 session state 获取 OpenAI 客户端
-- 调用 OpenAI Chat Completions API 生成回答
-- 设置适当的模型参数（温度、最大令牌数）
-- 错误处理和用户友好的提示
-
-## API 集成
-
-### 官方 API 集成
-
-当用户使用官方 OpenAI API 时：
-1. 用户在界面输入标准 API 密钥
-2. 系统创建标准 OpenAI 客户端实例
-3. 调用流程使用官方端点和认证
-
-### 自定义 API 集成
-
-当用户选择第三方或自建 API 时：
-1. 用户提供 API 密钥和自定义 API 基础 URL
-2. 系统预处理 URL，移除端点路径（如 /chat/completions 和 /embeddings）
-3. 使用自定义 base_url 创建 OpenAI 客户端
-4. 所有调用使用指定的 API 端点
-
-### 会话状态管理
-
-- API 客户端保存在 Streamlit 会话状态中
-- 文本块和向量在会话期间保持持久性
-- 处理状态标记（如文件是否已处理）避免重复操作
-
-## 用户体验优化
-
-### 参数调整
-
-用户可以通过界面调整以下参数：
-- **文本块大小**：控制每个文本块的字符数
-- **文本块重叠**：指定相邻块的重叠字符数
-- **检索数量**：设置每次检索返回的相关文本块数量
-
-### 进度反馈
-
-- 处理大型文件时显示进度条/状态指示器
-- API 调用期间显示"思考中"提示
-- 错误发生时提供明确的错误信息
-
-### 结果展示
-
-- 突出显示生成的答案
-- 通过可展开面板查看相关文本块
-- 清晰显示 API 配置状态和操作结果
-
-## 部署和扩展
-
-### 部署选项
-
-- 本地运行：使用 Streamlit 内置服务器
-- 云端部署：可部署到任何支持 Python 的云平台
-- Docker 容器化：适合团队和企业环境
-
-### 扩展方向
-
-- 支持多文件和多格式文档处理
-- 添加知识库持久化存储
-- 实现文档更新和增量处理
-- 引入更多 LLM 选项和模型参数
-- 增加向量数据库集成以支持大规模知识库
-
-## 性能考量
-
-- 文本块大小和重叠度对检索质量和 API 成本有直接影响
-- 向量计算在客户端完成，大型知识库可能影响性能
-- API 调用为异步操作，可能受网络延迟影响
-- 会话状态存储在内存中，不适合超大文档处理
-
-## 安全性考虑
-
-- API 密钥通过密码输入框保护
-- 文档处理和向量计算在客户端完成，保护隐私
-- 数据仅在会话期间保存，未进行持久化存储
-- 用户可选择自建 API 以避免数据暴露于第三方
-
-## 总结
-
-个人知识库助手项目采用模块化架构，结合现代自然语言处理技术，提供了一个简洁而强大的文档问答解决方案。通过灵活的 API 集成设计，系统支持官方和第三方语言模型服务，满足不同场景下的使用需求。项目具有良好的代码结构和可扩展性，为未来功能增强和性能优化提供了坚实基础。
+本项目采用 LangChain 生态，极大提升了可扩展性和工程规范，适合二次开发和大规模知识库场景。

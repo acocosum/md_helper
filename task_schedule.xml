@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <Date>2024-01-01T00:00:00</Date>
+    <Author>HDU Campus Network Auto-Login</Author>
+    <Description>杭州电子科技大学校园网自动登录程序</Description>
+  </RegistrationInfo>
+  <Triggers>
+    <!-- 开机启动触发器 -->
+    <LogonTrigger>
+      <Enabled>true</Enabled>
+      <Delay>PT1M</Delay>
+    </LogonTrigger>
+    <!-- 定时触发器 - 每30分钟执行一次 -->
+    <TimeTrigger>
+      <Repetition>
+        <Interval>PT30M</Interval>
+        <StopAtDurationEnd>false</StopAtDurationEnd>
+      </Repetition>
+      <StartBoundary>2024-01-01T00:00:00</StartBoundary>
+      <Enabled>true</Enabled>
+    </TimeTrigger>
+  </Triggers>
+  <Principals>
+    <Principal id="Author">
+      <LogonType>InteractiveToken</LogonType>
+      <RunLevel>LeastPrivilege</RunLevel>
+    </Principal>
+  </Principals>
+  <Settings>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <AllowHardTerminate>true</AllowHardTerminate>
+    <StartWhenAvailable>true</StartWhenAvailable>
+    <RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>
+    <IdleSettings>
+      <StopOnIdleEnd>false</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <AllowStartOnDemand>true</AllowStartOnDemand>
+    <Enabled>true</Enabled>
+    <Hidden>false</Hidden>
+    <RunOnlyIfIdle>false</RunOnlyIfIdle>
+    <DisallowStartOnRemoteAppSession>false</DisallowStartOnRemoteAppSession>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+    <WakeToRun>false</WakeToRun>
+    <ExecutionTimeLimit>PT1H</ExecutionTimeLimit>
+    <Priority>7</Priority>
+  </Settings>
+  <Actions Context="Author">
+    <Exec>
+      <Command>python</Command>
+      <Arguments>"$(var.WorkingDirectory)\campus_login.py"</Arguments>
+      <WorkingDirectory>$(var.WorkingDirectory)</WorkingDirectory>
+    </Exec>
+  </Actions>
+</Task>

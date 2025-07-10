@@ -1,0 +1,15 @@
+{
+  "username": "231060374",
+  "password": "demo_password_here",
+  "login_url": "https://login.hdu.edu.cn/cgi-bin/srun_portal",
+  "test_urls": [
+    "http://www.baidu.com",
+    "http://www.qq.com",
+    "http://www.163.com"
+  ],
+  "timeout": 10,
+  "retry_times": 3,
+  "retry_interval": 30,
+  "log_level": "INFO",
+  "log_file": "campus_login.log"
+}

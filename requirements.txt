@@ -1,3 +1,4 @@
+# 知识库助手依赖
 streamlit==1.30.0
 openai==1.6.0
 markdown==3.5
@@ -9,3 +10,6 @@ faiss-cpu==1.7.4
 unstructured==0.10.18
 unstructured-markdown==0.1.1
 tiktoken==0.5.1
+
+# 校园网自动登录依赖
+requests>=2.25.0
